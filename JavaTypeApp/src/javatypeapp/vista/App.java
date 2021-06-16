@@ -45,40 +45,68 @@ public class App extends javax.swing.JFrame {
                     etiquetaReloj.setText(formateador.format(LocalDateTime.now()));
                     String horaActual = etiquetaReloj.getText();
                     if(horaActual.equals(sHora1) || horaActual.equals(sHora2) || horaActual.equals(sHora3) || horaActual.equals(sHora4) || horaActual.equals(sHora5) && jBotonActivacion.isSelected()){
-                       
                         try {
                             String comandos = taComandos.getText();
                             String[] lines = comandos.split("\\r?\\n|\\r");
-                            String cmd = "cmd /c start cmd.exe";
-                            Runtime.getRuntime().exec(cmd);
-                            Thread.sleep(1500);
-                            for (int i = 0; i < lines.length; i++){
-                                escribir(lines[i]);
-                                presionarEnter();
-                                Thread.sleep(2000);
-                                // waits especificos
-                                if(lines[i].equals("gradlew.bat")){
-                                Thread.sleep(18000);
+                            if(!jHeadless.isSelected() && (!comandos.isEmpty())){
+                                String cmd = "cmd /c start cmd.exe";
+                                Runtime.getRuntime().exec(cmd);
+                                Thread.sleep(1500);
+                                for (int i = 0; i < lines.length; i++){
+                                    escribir(lines[i]);
+                                                presionarEnter();
+                                                Thread.sleep(2000);
+                                                // waits especificos
+                                                if(lines[i].equals("gradlew.bat")){
+                                                    Thread.sleep(18000);
+                                                }
+                                                if(lines[i].startsWith("start gradlew.bat AllTest")){
+                                                    Thread.sleep(120000);
+                                                }
+                                                //-----------
                                 }
-                                if(lines[i].startsWith("start gradlew.bat AllTest")){
-                                Thread.sleep(120000);
+                                // To kill a command prompt
+                                comandos = "";
+                                WindowsProcessKiller pKiller = new WindowsProcessKiller();
+                                String processName = "cmd.exe";
+                                boolean isRunning = pKiller.isProcessRunning(processName);
+                                System.out.println("is " + processName + " running : " + isRunning);
+                                if (isRunning) {
+                                    pKiller.killProcess(processName);
                                 }
-                                //-----------
-                            }
-                            // To kill a command prompt
-                            WindowsProcessKiller pKiller = new WindowsProcessKiller();
-                            String processName = "cmd.exe";
-                            boolean isRunning = pKiller.isProcessRunning(processName);
-                            System.out.println("is " + processName + " running : " + isRunning);
-                            if (isRunning) {
-                                pKiller.killProcess(processName);
-                            }
-                            else {
-                                System.out.println("Not able to find the process : "+processName);
-                            }
-                            
-                        } catch (IOException ioe) {
-                            System.out.println (ioe);
+                                else {
+                                    System.out.println("Not able to find the process : "+processName);
+                                }
+                            }else if(jHeadless.isSelected() && !comandos.isEmpty()){
+                                for (int i = 0; i < lines.length; i++){
+                                    Runtime.getRuntime().exec(lines[i]);
+                                    Thread.sleep(2000);
+                                    // waits especificos
+                                    if(lines[i].equals("gradlew.bat")){
+                                        Thread.sleep(18000);
+                                    }
+                                    if(lines[i].startsWith("start gradlew.bat AllTest")){
+                                        Thread.sleep(120000);
+                                    }
+                                }
+                                // To kill a command prompt
+                                comandos = "";
+                                WindowsProcessKiller pKiller = new WindowsProcessKiller();
+                                String processName = "cmd.exe";
+                                boolean isRunning = pKiller.isProcessRunning(processName);
+                                System.out.println("is " + processName + " running : " + isRunning);
+                                if (isRunning) {
+                                    pKiller.killProcess(processName);
+                                }
+                                else {
+                                    System.out.println("Not able to find the process : "+processName);
+                                }
+                            }    
+
+                        } catch (IOException ex) {
+                            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (InterruptedException ex) {
+                            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
                         } catch (AWTException ex) {
                             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
                         }                        
@@ -86,6 +114,7 @@ public class App extends javax.swing.JFrame {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+                
             }
         }
                     };
@@ -250,6 +279,7 @@ public class App extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        jHeadless = new javax.swing.JCheckBox();
         lTitulo = new javax.swing.JLabel();
         jScrollPane1 = new javax.swing.JScrollPane();
         taComandos = new javax.swing.JTextArea();
@@ -265,8 +295,17 @@ public class App extends javax.swing.JFrame {
         hora4 = new javax.swing.JFormattedTextField();
         hora5 = new javax.swing.JFormattedTextField();
         jLabel3 = new javax.swing.JLabel();
+        jBotonEjecutar = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+
+        jHeadless.setText("Headless");
+        jHeadless.setToolTipText("Si está seleccionado se ejecutará en segundo plano");
+        jHeadless.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jHeadlessActionPerformed(evt);
+            }
+        });
 
         lTitulo.setFont(new java.awt.Font("Tahoma", 1, 12)); // NOI18N
         lTitulo.setText("Aplicación de ejecución CMD");
@@ -281,7 +320,7 @@ public class App extends javax.swing.JFrame {
         jTitulo3.setText("Ingresar horarios de ejecución");
 
         jBotonActivacion.setText("Activar");
-        jBotonActivacion.setToolTipText("Ingresar horarios y activar");
+        jBotonActivacion.setToolTipText("Se activa el programador de tareas");
         jBotonActivacion.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jBotonActivacionActionPerformed(evt);
@@ -354,16 +393,21 @@ public class App extends javax.swing.JFrame {
         jLabel3.setFont(new java.awt.Font("Times New Roman", 0, 11)); // NOI18N
         jLabel3.setText("Created By Lucas E. Yoris ");
 
+        jBotonEjecutar.setText("Ejecutar");
+        jBotonEjecutar.setToolTipText("Se ejecuta el comando inmediatamente");
+        jBotonEjecutar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jBotonEjecutarActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap(28, Short.MAX_VALUE)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(etiquetaReloj)
-                        .addGap(23, 23, 23))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
                             .addComponent(lTitulo)
@@ -377,44 +421,65 @@ public class App extends javax.swing.JFrame {
                                         .addComponent(jTitulo2)
                                         .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 321, javax.swing.GroupLayout.PREFERRED_SIZE)))
                                 .addGroup(layout.createSequentialGroup()
-                                    .addGap(155, 155, 155)
-                                    .addComponent(jBotonActivacion, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addComponent(jTitulo3)
-                                .addComponent(jLabel2)
-                                .addGroup(layout.createSequentialGroup()
-                                    .addComponent(hora1, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                    .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                        .addComponent(jLabel3)
+                                        .addGroup(layout.createSequentialGroup()
+                                            .addComponent(hora1, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                            .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                                                .addGroup(layout.createSequentialGroup()
+                                                    .addComponent(jBotonActivacion, javax.swing.GroupLayout.PREFERRED_SIZE, 102, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                                    .addComponent(jBotonEjecutar))
+                                                .addGroup(layout.createSequentialGroup()
+                                                    .addComponent(hora2, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                    .addComponent(hora3, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                                    .addComponent(hora4, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)))))
                                     .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(hora2, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(hora3, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(hora4, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                    .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                    .addComponent(hora5, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE))
-                                .addComponent(jLabel3))
-                            .addGap(36, 36, 36)))))
+                                    .addComponent(hora5, javax.swing.GroupLayout.PREFERRED_SIZE, 76, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                            .addGap(36, 36, 36)))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                                    .addComponent(jTitulo3)
+                                    .addComponent(jLabel2))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addComponent(jHeadless))
+                            .addComponent(etiquetaReloj))
+                        .addGap(23, 23, 23))))
         );
+
+        layout.linkSize(javax.swing.SwingConstants.HORIZONTAL, new java.awt.Component[] {jBotonActivacion, jBotonEjecutar});
+
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(21, 21, 21)
                 .addComponent(lTitulo)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(52, 52, 52)
-                        .addComponent(jLabel1))
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(52, 52, 52)
+                                .addComponent(jLabel1))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(9, 9, 9)
+                                .addComponent(etiquetaReloj))
+                            .addGroup(layout.createSequentialGroup()
+                                .addGap(18, 18, 18)
+                                .addComponent(jTitulo2, javax.swing.GroupLayout.PREFERRED_SIZE, 12, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(jTitulo3, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(5, 5, 5)
+                        .addComponent(jLabel2))
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(9, 9, 9)
-                        .addComponent(etiquetaReloj))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(18, 18, 18)
-                        .addComponent(jTitulo2, javax.swing.GroupLayout.PREFERRED_SIZE, 12, javax.swing.GroupLayout.PREFERRED_SIZE)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 146, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jTitulo3, javax.swing.GroupLayout.PREFERRED_SIZE, 14, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(5, 5, 5)
-                .addComponent(jLabel2)
+                        .addComponent(jHeadless)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(hora1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -422,12 +487,18 @@ public class App extends javax.swing.JFrame {
                     .addComponent(hora3, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(hora4, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(hora5, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jBotonActivacion)
-                .addGap(18, 18, 18)
-                .addComponent(jLabel3)
+                .addGap(12, 12, 12)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(jLabel3)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(jBotonEjecutar)
+                            .addComponent(jBotonActivacion))
+                        .addGap(30, 30, 30)))
                 .addContainerGap(15, Short.MAX_VALUE))
         );
+
+        layout.linkSize(javax.swing.SwingConstants.VERTICAL, new java.awt.Component[] {jBotonActivacion, jBotonEjecutar});
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
@@ -444,6 +515,7 @@ public class App extends javax.swing.JFrame {
             hora3.setText(sHora3);
             hora4.setText(sHora4);
             hora5.setText(sHora5);
+            jBotonActivacion.setText("Desactivar");
         }
         if(!jBotonActivacion.isSelected()){
             sHora1 = "";
@@ -451,11 +523,7 @@ public class App extends javax.swing.JFrame {
             sHora3 = "";
             sHora4 = "";
             sHora5 = "";
-            hora1.setText(sHora1);
-            hora2.setText(sHora2);
-            hora3.setText(sHora3);
-            hora4.setText(sHora4);
-            hora5.setText(sHora5);
+            jBotonActivacion.setText("Activar");
         }
         
     }//GEN-LAST:event_jBotonActivacionActionPerformed
@@ -463,6 +531,78 @@ public class App extends javax.swing.JFrame {
     private void hora1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hora1ActionPerformed
         hora1.setText("");
     }//GEN-LAST:event_hora1ActionPerformed
+
+    private void jHeadlessActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jHeadlessActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_jHeadlessActionPerformed
+
+    private void jBotonEjecutarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBotonEjecutarActionPerformed
+        try {
+            String comandos = taComandos.getText();
+            String[] lines = comandos.split("\\r?\\n|\\r");
+            if(!jHeadless.isSelected() && (!comandos.isEmpty())){
+                String cmd = "cmd /c start cmd.exe";
+                Runtime.getRuntime().exec(cmd);
+                Thread.sleep(1500);
+                for (int i = 0; i < lines.length; i++){
+                    escribir(lines[i]);
+                                presionarEnter();
+                                Thread.sleep(2000);
+                                // waits especificos
+                                if(lines[i].equals("gradlew.bat")){
+                                    Thread.sleep(18000);
+                                }
+                                if(lines[i].startsWith("start gradlew.bat AllTest")){
+                                    Thread.sleep(120000);
+                                }
+                                //-----------
+                }
+                // To kill a command prompt
+                comandos = "";
+                WindowsProcessKiller pKiller = new WindowsProcessKiller();
+                String processName = "cmd.exe";
+                boolean isRunning = pKiller.isProcessRunning(processName);
+                System.out.println("is " + processName + " running : " + isRunning);
+                if (isRunning) {
+                    pKiller.killProcess(processName);
+                }
+                else {
+                    System.out.println("Not able to find the process : "+processName);
+                }
+            }else if(jHeadless.isSelected() && !comandos.isEmpty()){
+                for (int i = 0; i < lines.length; i++){
+                    Runtime.getRuntime().exec(lines[i]);
+                    Thread.sleep(2000);
+                    // waits especificos
+                    if(lines[i].equals("gradlew.bat")){
+                        Thread.sleep(18000);
+                    }
+                    if(lines[i].startsWith("start gradlew.bat AllTest")){
+                        Thread.sleep(120000);
+                    }
+                }
+                // To kill a command prompt
+                comandos = "";
+                WindowsProcessKiller pKiller = new WindowsProcessKiller();
+                String processName = "cmd.exe";
+                boolean isRunning = pKiller.isProcessRunning(processName);
+                System.out.println("is " + processName + " running : " + isRunning);
+                if (isRunning) {
+                    pKiller.killProcess(processName);
+                }
+                else {
+                    System.out.println("Not able to find the process : "+processName);
+                }
+            }    
+            
+        } catch (IOException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (AWTException ex) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }//GEN-LAST:event_jBotonEjecutarActionPerformed
 
     /**
      * @param args the command line arguments
@@ -512,6 +652,8 @@ public class App extends javax.swing.JFrame {
     private javax.swing.JFormattedTextField hora4;
     private javax.swing.JFormattedTextField hora5;
     private javax.swing.JToggleButton jBotonActivacion;
+    private javax.swing.JButton jBotonEjecutar;
+    private javax.swing.JCheckBox jHeadless;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
