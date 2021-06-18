@@ -43,76 +43,77 @@ public class App extends javax.swing.JFrame {
         this.setTitle("App CMD");
         DateTimeFormatter formateador = DateTimeFormatter.ofPattern("HH:mm:ss");
         Runnable runnable = new Runnable() {
-        @Override
-        public void run() {
-        while(true){
-                try {
-                    Thread.sleep(500);
-                    etiquetaReloj.setText(formateador.format(LocalDateTime.now()));
-                    String horaActual = etiquetaReloj.getText();
-                    if(horaActual.equals(sHora1) || horaActual.equals(sHora2) || horaActual.equals(sHora3) || horaActual.equals(sHora4) || horaActual.equals(sHora5) && jBotonActivacion.isSelected()){
-                        try {
-                            String comandos = taComandos.getText();
-                            commands = comandos;
-                            String[] lines = comandos.split("\\r?\\n|\\r");
-                            if(!comandos.isEmpty()){
-                                String cmd = "cmd /c start cmd.exe";
-                                Runtime.getRuntime().exec(cmd);
-                                Thread.sleep(1000);
-                                for (int i = 0; i < lines.length; i++){
-                                    escribir(lines[i]);
-                                    presionarEnter();
-                                    Thread.sleep(2000);
-                                    // waits especificos
-                                    if(lines[i].equals("gradlew.bat")){
-                                        TimeUnit.SECONDS.sleep(18);
+            @Override
+            public void run() {
+                while (true) {
+                    try {
+                        Thread.sleep(500);
+                        etiquetaReloj.setText(formateador.format(LocalDateTime.now()));
+                        String horaActual = etiquetaReloj.getText();
+                        if (horaActual.equals(sHora1) || horaActual.equals(sHora2) || horaActual.equals(sHora3) || horaActual.equals(sHora4) || horaActual.equals(sHora5) && jBotonActivacion.isSelected()) {
+                            try {
+                                String comandos = taComandos.getText();
+                                commands = comandos;
+                                String[] lines = comandos.split("\\r?\\n|\\r");
+                                if (!comandos.isEmpty()) {
+                                    String cmd = "cmd /c start cmd.exe";
+                                    Runtime.getRuntime().exec(cmd);
+                                    Thread.sleep(1000);
+                                    for (int i = 0; i < lines.length; i++) {
+                                        escribir(lines[i]);
+                                        presionarEnter();
+                                        Thread.sleep(2000);
+                                        // waits especificos
+                                        if (lines[i].equals("gradlew.bat")) {
+                                            TimeUnit.SECONDS.sleep(18);
+                                        }
+                                        if (lines[i].startsWith("start gradlew.bat AllTest")) {
+                                            TimeUnit.SECONDS.sleep(125);
+                                        }
+                                        //-----------
                                     }
-                                    if(lines[i].startsWith("start gradlew.bat AllTest")){
-                                        TimeUnit.SECONDS.sleep(125);
+                                    seconds = segundos.getText();
+                                    String x;
+                                    x = seconds.replace(" ", "");
+                                    if (segundos.getText() == null) {
+                                        TimeUnit.SECONDS.sleep(5);
+                                    } else {
+                                        TimeUnit.SECONDS.sleep(Integer.parseInt(x));
                                     }
-                                    //-----------
+                                    // To kill a command prompt
+                                    comandos = "";
+                                    WindowsProcessKiller pKiller = new WindowsProcessKiller();
+                                    String processName = "cmd.exe";
+                                    boolean isRunning = pKiller.isProcessRunning(processName);
+                                    System.out.println("is " + processName + " running : " + isRunning);
+                                    if (isRunning) {
+                                        pKiller.killProcess(processName);
+                                    } else {
+                                        System.out.println("Not able to find the process : " + processName);
+                                    }
+                                } else {
+                                    //modo headless
                                 }
-                                seconds = segundos.getText();
-                                if(segundos.getText() != null ){
-                                    TimeUnit.SECONDS.sleep(5);
-                                }else{
-                                    TimeUnit.SECONDS.sleep(Integer.parseInt(segundos.getText()));
-                                }
-                                // To kill a command prompt
-                                comandos = "";
-                                WindowsProcessKiller pKiller = new WindowsProcessKiller();
-                                String processName = "cmd.exe";
-                                boolean isRunning = pKiller.isProcessRunning(processName);
-                                System.out.println("is " + processName + " running : " + isRunning);
-                                if (isRunning) {
-                                    pKiller.killProcess(processName);
-                                }
-                                else {
-                                    System.out.println("Not able to find the process : "+processName);
-                                }
-                            }else{ 
-                            //modo headless
-                            }    
 
-                        } catch (IOException ex) {
-                            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (InterruptedException ex) {
-                            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (AWTException ex) {
-                            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-                        }                        
+                            } catch (IOException ex) {
+                                Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (InterruptedException ex) {
+                                Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (AWTException ex) {
+                                Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
                     }
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
+
                 }
-                
             }
-        }
-                    };
-                    Thread hilo = new Thread(runnable);
-                    hilo.start();
+        };
+        Thread hilo = new Thread(runnable);
+        hilo.start();
     }
-    
+
     /*public void switchFocus() { 
         try { 
             Robot r = new Robot(); 
@@ -124,117 +125,112 @@ public class App extends javax.swing.JFrame {
         } catch(AWTException e) { 
             e.printStackTrace();
         } 
-    }*/ 
-    
+    }*/
     protected void presionarEnter() throws InterruptedException, AWTException {
         Robot robot = new Robot();
-        try { 			
-            robot = new Robot(); 			
+        try {
+            robot = new Robot();
             robot.keyPress(KeyEvent.VK_ENTER); // confirm by pressing Enter in the end 			
-            robot.keyRelease(KeyEvent.VK_ENTER); 		
-        } catch (AWTException e) { 			
-            e.printStackTrace(); 		
+            robot.keyRelease(KeyEvent.VK_ENTER);
+        } catch (AWTException e) {
+            e.printStackTrace();
         }
-            
+
     }
-    
-    protected void escribir(String string) throws InterruptedException, AWTException
-    {
+
+    protected void escribir(String string) throws InterruptedException, AWTException {
         //Instantiating robot
         Robot robot = new Robot();
 
         //Looping through every char
-        for (int i = 0; i < string.length(); i++)
-        {
+        for (int i = 0; i < string.length(); i++) {
             //Getting current char
             char c = string.charAt(i);
 
             //Pressing shift if it's uppercase ! " * ' / # \ $ & % ( )
-            if (Character.isUpperCase(c))
-            {
+            if (Character.isUpperCase(c)) {
                 robot.keyPress(KeyEvent.VK_SHIFT);
             }
-                if(c == '!' || c == '"' || c == '*' || c == '\'' || c == '/' || c == '#' || c == '$' || c == '&' 
-                || c == '%' || c == '(' || c == ')' || c == '\\' || c == ':' || c == '_' || c == '-' || c == '.' 
-                || c == ';' || c == '<' || c == '=' || c == '>' || c == '?' || c == '+' ) {
-                switch (c){
-                    case '!': 
-                        pressUnicode(robot,33);
-                    break;
+            if (c == '!' || c == '"' || c == '*' || c == '\'' || c == '/' || c == '#' || c == '$' || c == '&'
+                    || c == '%' || c == '(' || c == ')' || c == '\\' || c == ':' || c == '_' || c == '-' || c == '.'
+                    || c == ';' || c == '<' || c == '=' || c == '>' || c == '?' || c == '+') {
+                switch (c) {
+                    case '!':
+                        pressUnicode(robot, 33);
+                        break;
                     case '"':
-                        pressUnicode(robot,34);
-                    break;
+                        pressUnicode(robot, 34);
+                        break;
                     case '#':
-                        pressUnicode(robot,35);
-                    break;
+                        pressUnicode(robot, 35);
+                        break;
                     case '$':
-                        pressUnicode(robot,36);
-                    break;
+                        pressUnicode(robot, 36);
+                        break;
                     case '%':
-                        pressUnicode(robot,37);
-                    break;
+                        pressUnicode(robot, 37);
+                        break;
                     case '&':
-                        pressUnicode(robot,38);
-                    break;
+                        pressUnicode(robot, 38);
+                        break;
                     case '\\':
-                        pressUnicode(robot,92);
-                    break;
+                        pressUnicode(robot, 92);
+                        break;
                     case '(':
-                        pressUnicode(robot,40);
-                    break;
+                        pressUnicode(robot, 40);
+                        break;
                     case ')':
-                        pressUnicode(robot,41);
-                    break;
+                        pressUnicode(robot, 41);
+                        break;
                     case '*':
-                        pressUnicode(robot,42);
-                    break;
-                    case '/': 
-                        pressUnicode(robot,47);
-                    break;
-                    case '\'': 
-                        pressUnicode(robot,39);
-                    break;
-                    case ':': 
-                        pressUnicode(robot,58);
-                    break;
-                    case '-': 
-                        pressUnicode(robot,45);
-                    break;
-                    case '_': 
-                        pressUnicode(robot,95);
-                    break;
-                    case '.': 
-                        pressUnicode(robot,46);
-                    break;
-                    case ';': 
-                        pressUnicode(robot,59);
-                    break;
-                    case '<': 
-                        pressUnicode(robot,60);
-                    break;
-                    case '=': 
-                        pressUnicode(robot,61);
-                    break;
-                    case '>': 
-                        pressUnicode(robot,62);
-                    break;
-                    case '?': 
-                        pressUnicode(robot,63);
-                    break;
-                    case '+': 
-                        pressUnicode(robot,43);
-                    break;
+                        pressUnicode(robot, 42);
+                        break;
+                    case '/':
+                        pressUnicode(robot, 47);
+                        break;
+                    case '\'':
+                        pressUnicode(robot, 39);
+                        break;
+                    case ':':
+                        pressUnicode(robot, 58);
+                        break;
+                    case '-':
+                        pressUnicode(robot, 45);
+                        break;
+                    case '_':
+                        pressUnicode(robot, 95);
+                        break;
+                    case '.':
+                        pressUnicode(robot, 46);
+                        break;
+                    case ';':
+                        pressUnicode(robot, 59);
+                        break;
+                    case '<':
+                        pressUnicode(robot, 60);
+                        break;
+                    case '=':
+                        pressUnicode(robot, 61);
+                        break;
+                    case '>':
+                        pressUnicode(robot, 62);
+                        break;
+                    case '?':
+                        pressUnicode(robot, 63);
+                        break;
+                    case '+':
+                        pressUnicode(robot, 43);
+                        break;
                 }
-                    robot.keyRelease(KeyEvent.VK_ALT);
-            }else{
+                robot.keyRelease(KeyEvent.VK_ALT);
+            } else {
                 //Actually pressing the key
                 robot.keyPress(Character.toUpperCase(c));
                 robot.keyRelease(Character.toUpperCase(c));
             }
 
             //Releasing shift if it's uppercase
-            if (Character.isUpperCase(c))
-            {
+            if (Character.isUpperCase(c)) {
                 robot.keyRelease(KeyEvent.VK_SHIFT);
             }
 
@@ -242,24 +238,21 @@ public class App extends javax.swing.JFrame {
             Thread.sleep(20);
         }
     }
-    
-    public static void pressUnicode(Robot r, int key_code)
-{
-    r.keyPress(KeyEvent.VK_ALT);
 
-    for(int i = 3; i >= 0; --i)
-    {
-        // extracts a single decade of the key-code and adds
-        // an offset to get the required VK_NUMPAD key-code
-        int numpad_kc = key_code / (int) (Math.pow(10, i)) % 10 + KeyEvent.VK_NUMPAD0;
+    public static void pressUnicode(Robot r, int key_code) {
+        r.keyPress(KeyEvent.VK_ALT);
 
-        r.keyPress(numpad_kc);
-        r.keyRelease(numpad_kc);
+        for (int i = 3; i >= 0; --i) {
+            // extracts a single decade of the key-code and adds
+            // an offset to get the required VK_NUMPAD key-code
+            int numpad_kc = key_code / (int) (Math.pow(10, i)) % 10 + KeyEvent.VK_NUMPAD0;
+
+            r.keyPress(numpad_kc);
+            r.keyRelease(numpad_kc);
+        }
+
+        r.keyRelease(KeyEvent.VK_ALT);
     }
-
-    r.keyRelease(KeyEvent.VK_ALT);
-}
-    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -558,7 +551,7 @@ public class App extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jBotonActivacionActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBotonActivacionActionPerformed
-        if(jBotonActivacion.isSelected()){
+        if (jBotonActivacion.isSelected()) {
             sHora1 = hora1.getText();
             sHora2 = hora2.getText();
             sHora3 = hora3.getText();
@@ -571,7 +564,7 @@ public class App extends javax.swing.JFrame {
             hora5.setText(sHora5);
             jBotonActivacion.setText("Desactivar");
         }
-        if(!jBotonActivacion.isSelected()){
+        if (!jBotonActivacion.isSelected()) {
             sHora1 = "";
             sHora2 = "";
             sHora3 = "";
@@ -579,7 +572,7 @@ public class App extends javax.swing.JFrame {
             sHora5 = "";
             jBotonActivacion.setText("Activar");
         }
-        
+
     }//GEN-LAST:event_jBotonActivacionActionPerformed
 
     private void hora1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_hora1ActionPerformed
@@ -590,28 +583,30 @@ public class App extends javax.swing.JFrame {
             String comandos = taComandos.getText();
             commands = comandos;
             String[] lines = comandos.split("\\r?\\n|\\r");
-            if(!comandos.isEmpty()){
+            if (!comandos.isEmpty()) {
                 String cmd = "cmd /c start cmd.exe";
                 Process process = Runtime.getRuntime().exec(cmd);
                 Thread.sleep(1000);
-                for (int i = 0; i < lines.length; i++){
+                for (int i = 0; i < lines.length; i++) {
                     escribir(lines[i]);
                     presionarEnter();
                     Thread.sleep(500);
                     // waits especificos
-                    if(lines[i].equals("gradlew.bat")){
+                    if (lines[i].equals("gradlew.bat")) {
                         TimeUnit.SECONDS.sleep(18);
                     }
-                    if(lines[i].startsWith("start gradlew.bat AllTest")){
+                    if (lines[i].startsWith("start gradlew.bat AllTest")) {
                         TimeUnit.SECONDS.sleep(125);
                     }
                     //-----------
                 }
                 seconds = segundos.getText();
-                if(segundos.getText() != null ){
+                String x;
+                x = seconds.replace(" ", "");
+                if (segundos.getText() == null) {
                     TimeUnit.SECONDS.sleep(5);
-                }else{
-                    TimeUnit.SECONDS.sleep(Integer.parseInt(segundos.getText()));
+                } else {
+                    TimeUnit.SECONDS.sleep(Integer.parseInt(x));
                 }
                 // To kill a command prompt
                 comandos = "";
@@ -621,14 +616,13 @@ public class App extends javax.swing.JFrame {
                 System.out.println("is " + processName + " running : " + isRunning);
                 if (isRunning) {
                     pKiller.killProcess(processName);
+                } else {
+                    System.out.println("Not able to find the process : " + processName);
                 }
-                else {
-                    System.out.println("Not able to find the process : "+processName);
-                }
-            }else{
+            } else {
                 //modo headless
-            }    
-            
+            }
+
         } catch (IOException ex) {
             Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         } catch (InterruptedException ex) {
@@ -659,7 +653,6 @@ public class App extends javax.swing.JFrame {
         cargar.setVisible(true);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
 
-   
     /**
      * @param args the command line arguments
      */
@@ -686,7 +679,7 @@ public class App extends javax.swing.JFrame {
             java.util.logging.Logger.getLogger(App.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
         }
         //</editor-fold>
-        
+
 
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
